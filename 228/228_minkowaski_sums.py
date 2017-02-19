@@ -8,39 +8,31 @@ def show(points):
         plt.show()
 
 class XY:
-    def __init__(self, x, y):
-        self.nums = [x,y]
+    def __init__(self, xx, yy):
+        self.x = xx
+        self.y = yy
 
-    @property
-    def x(self):
-        return self.nums[0]
-
-    @property
-    def y(self):
-        return self.nums[1]
-
-    @property
-    def r(self):
-        return math.sqrt(self.x*self.x + self.y*self.y)
-
-    @property
-    def theta(self):
-        '''returns angle of the point in radians'''
-        try:
+        try: #theta = angle of the point in radians WITH respect to positive x axis
             adjust = 0 #how much to adjust the angle (radians)
             if (self.x < 0 and self.y >= 0) or (self.x < 0 and self.y <= 0): #2nd quadrant
                 adjust = math.pi
             elif (self.x > 0 and self.y < 0):
                 adjust = 2*math.pi
-            return adjust + math.atan(self.y/self.x)
+            self.theta = adjust + math.atan(self.y/self.x)
         except ZeroDivisionError:
             if self.y == 0:
-                return null
+                self.theta = null
             elif self.y > 0:
-                return math.pi/2
+                self.theta = math.pi/2
             else:
-                return (3*math.pi/2)
+                self.theta = (3*math.pi/2)
 
+    @property
+    def theta_ry(self):
+        angle = self.theta - math.pi/2
+        if angle < 0:
+            angle += 2*math.pi
+        return angle
 
     def __add__(self, xy):
         return XY(xy.x + self.x, xy.y + self.y)
@@ -57,6 +49,41 @@ class Shape:
     def __init__(self):
         self.sides = [] #represented by vecotrs
         self.first_vertex = None #where the first vector corresponds to
+
+    def __add__(self, shape2): #shape sides are sorted by theta!
+        a = Shape() #a stands for answer
+        a.first_vertex = self.first_vertex + shape2.first_vertex
+        i1, i2 = 0, 0
+        i1max, i2max = len(self.sides), len(shape2.sides)
+
+        while (i1 < i1max) and (i2 < i2max):
+            if self.sides[i1].theta_ry == shape2.sides[i2].theta_ry:
+                a.sides.append(self.sides[i1] + shape2.sides[i2])
+                i1 += 1
+                i2 += 1
+            elif self.sides[i1].theta_ry < shape2.sides[i2].theta_ry:
+                a.sides.append(self.sides[i1])
+                i1 += 1
+            else:
+                a.sides.append(shape2.sides[i2])
+                i2 += 1
+        if (i1 < i1max):
+            for i in range(i1, i1max):
+                a.sides.append(self.sides[i])
+        elif (i2 < i2max):
+            for i in range(i2, i2max):
+                a.sides.append(shape2.sides[i])
+        return a
+
+
+
+
+
+
+
+
+
+
 
     #ADD FUCNTION DOES NOT WORK ##########################################################################
     #v1 with adjacent points (theta is really really close) without v2 points inside will make some points
@@ -121,10 +148,13 @@ class Reg_Polygon(Shape):
 def test_theta(x,y):
     return math.degrees(XY(x, y).theta)
 
-# a = Reg_Polygon(1864)
-# for i in range(1865, 1910):
-#     print(len(a.vertices))
-#     a = a + Reg_Polygon(i)
+def test_theta_ry(x,y):
+    return math.degrees(XY(x, y).theta_ry)
+
+a = Reg_Polygon(1864)
+for i in range(1865, 1910):
+    a = a + Reg_Polygon(i)
+    print(len(a.sides))
 #     a.sort()
 #a = Reg_Polygon(4)
 #b = Reg_Polygon(5)
